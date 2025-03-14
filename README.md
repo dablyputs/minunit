@@ -37,9 +37,9 @@ int main(void) {
     return MU_EXIT_CODE;
 }
 
-```
 Which will produce color (cannot be displayed on github) output similar to:
 
+```
 [TEST] Running test_example_verbose...
 [ASSERTION PASSED] 1 should equal 1
 [ASSERTION PASSED] 2 should equal 2
