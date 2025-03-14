@@ -16,6 +16,8 @@ This fork simply adds a verbose set of test macros with colored output similar t
 
 ## How to use Verbose Mode
 
+This is a short example of the new verbose macro usage:
+
 ```c
 #include "minunit.h"
 
