@@ -12,7 +12,7 @@ http://www.jera.com/techinfo/jtns/jtn002.html
 
 ## Verbose Mode
 
-This fork simply adds a verbose set of test macros with colored output similar to that of the check50 program from the Harvard CS50 intro to computer science class available on edx and at Harvard the college. I need this type of output because my ADHD brain is needs a little reward when I get something right.
+This fork simply adds a verbose set of test macros with colored output similar to that of the check50 program from the Harvard CS50 intro to computer science class available on edx and at Harvard the college. My ADHD brain needs a little reward when I get something right.
 
 ## How to use Verbose Mode
 
