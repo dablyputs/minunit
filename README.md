@@ -29,7 +29,6 @@ MU_TEST_VERBOSE(test_example_verbose) {
 }
 
 MU_TEST_SUITE(test_suite) {
-    //   MU_RUN_TEST(test_example);                  // Non-verbose test
     MU_RUN_TEST_VERBOSE(test_example_verbose);  // Verbose test
 }
 
