@@ -124,14 +124,14 @@ static void (*minunit_teardown)(void) = NULL;
 
 
 #define MU_RUN_TEST_VERBOSE(test) do { \
-    printf(ANSI_COLOR_YELLOW "[TEST] Running %s\n" ANSI_COLOR_RESET, #test); \
+    printf(ANSI_COLOR_YELLOW "\n[TEST] Running %s...\n" ANSI_COLOR_RESET, #test); \
     char *message = test(); \
     minunit_run++; \
     if (message) { \
-        printf(ANSI_COLOR_RED "[FAIL] %s: %s\n" ANSI_COLOR_RESET, #test, message); \
+        printf(ANSI_COLOR_RED "[FAIL] %s: %s" ANSI_COLOR_RESET, #test, message); \
         minunit_fail++; \
     } else { \
-        printf(ANSI_COLOR_GREEN "[PASS] %s\n" ANSI_COLOR_RESET, #test); \
+        printf(ANSI_COLOR_GREEN "[PASS] %s" ANSI_COLOR_RESET, #test); \
     } \
 } while (0)
 
@@ -181,7 +181,7 @@ static void (*minunit_teardown)(void) = NULL;
     printf(ANSI_COLOR_BLUE "Tests run: %d\n" ANSI_COLOR_RESET, minunit_run); \
     printf(ANSI_COLOR_MAGENTA "Assertions: %d\n" ANSI_COLOR_RESET, minunit_assert); \
     printf(ANSI_COLOR_CYAN "Failures: %d\n" ANSI_COLOR_RESET, minunit_fail); \
-    printf(ANSI_BOLD "Finished in %.8f seconds (real) %.8f seconds (proc)\n\n" ANSI_COLOR_RESET, \
+    printf(ANSI_BOLD "\nFinished in %.8f seconds (real) %.8f seconds (proc)\n\n" ANSI_COLOR_RESET, \
         mu_timer_real() - minunit_real_timer, \
         mu_timer_cpu() - minunit_proc_timer); \
 } while (0)
