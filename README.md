@@ -37,6 +37,23 @@ int main(void) {
     return MU_EXIT_CODE;
 }
 ```
+Which will produce output similar to:
+
+```
+[TEST] Running test_example_verbose...
+[ASSERTION PASSED] 1 should equal 1
+[ASSERTION PASSED] 2 should equal 2
+[PASS] test_example_verbose
+
+=== Test Summary ===
+Tests run: 1
+Assertions: 2
+Failures: 0
+
+Finished in 223199.39773168 seconds (real) 0.00055337 seconds (proc)
+```
+
+##How to use non-verbose tests
 
 This is a minimal test suite written with minunit:
 
@@ -56,23 +73,7 @@ int main(int argc, char *argv[]) {
 	return MU_EXIT_CODE;
 }
 ```
-Which will produce output similar to:
 
-```
-[TEST] Running test_example_verbose...
-[ASSERTION PASSED] 1 should equal 1
-[ASSERTION PASSED] 2 should equal 2
-[PASS] test_example_verbose
-
-=== Test Summary ===
-Tests run: 1
-Assertions: 2
-Failures: 0
-
-Finished in 223199.39773168 seconds (real) 0.00055337 seconds (proc)
-```
-
-##How to use non-verbose tests
 
 Which will produce the following output:
 
