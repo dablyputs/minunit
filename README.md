@@ -39,6 +39,7 @@ int main(void) {
 ```
 Which will produce output similar to:
 
+```
 <span style="color: yellow;">[TEST] Running test_example_verbose...</span>
 [ASSERTION PASSED] 1 should equal 1
 [ASSERTION PASSED] 2 should equal 2
@@ -50,6 +51,7 @@ Assertions: 2
 Failures: 0
 
 Finished in 223199.39773168 seconds (real) 0.00055337 seconds (proc)
+```
 
 ##How to use non-verbose tests
 
