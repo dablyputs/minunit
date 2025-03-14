@@ -55,7 +55,7 @@ Failures: 0
 Finished in 223199.39773168 seconds (real) 0.00055337 seconds (proc)
 ```
 
-##How to use non-verbose tests
+## How to use non-verbose tests
 
 This is a minimal test suite written with minunit:
 
