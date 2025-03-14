@@ -39,8 +39,7 @@ int main(void) {
 ```
 Which will produce output similar to:
 
-```
-<span style="color: yellow;">[TEST] Running test_example_verbose...</span>
+[TEST] Running test_example_verbose...
 [ASSERTION PASSED] 1 should equal 1
 [ASSERTION PASSED] 2 should equal 2
 [PASS] test_example_verbose
@@ -60,8 +59,7 @@ This is a minimal test suite written with minunit:
 ```c
 #include "minunit.h"
 
-MU_TEST(test_check) {
-	mu_check(5 == 7);
+MU_TEST(test_check) _check(5 == 7);
 }
 MU_TEST_SUITE(test_suite) {
 	MU_RUN_TEST(test_check);
