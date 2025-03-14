@@ -36,8 +36,9 @@ int main(void) {
     MU_REPORT_VERBOSE();
     return MU_EXIT_CODE;
 }
+
 ```
-Which will produce output similar to:
+Which will produce color (cannot be displayed on github) output similar to:
 
 [TEST] Running test_example_verbose...
 [ASSERTION PASSED] 1 should equal 1
