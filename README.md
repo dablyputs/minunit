@@ -40,7 +40,7 @@ int main(void) {
 Which will produce output similar to:
 
 ```
-[TEST] Running test_example_verbose...
+<span style="color: yellow;">[TEST] Running test_example_verbose...</span>
 [ASSERTION PASSED] 1 should equal 1
 [ASSERTION PASSED] 2 should equal 2
 [PASS] test_example_verbose
