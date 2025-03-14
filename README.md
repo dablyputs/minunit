@@ -36,6 +36,7 @@ int main(void) {
     MU_REPORT_VERBOSE();
     return MU_EXIT_CODE;
 }
+```
 
 Which will produce color (cannot be displayed on github) output similar to:
 
