@@ -10,7 +10,33 @@ and time elapsed.
 Note that this project is based on:
 http://www.jera.com/techinfo/jtns/jtn002.html
 
-## How to use it
+## Verbose Mode
+
+Added verbose functions with colored output similar to that of the check50 program from the Harvard CS50 intro to computer science class available on edx and at Harvard the college. I need this type of output because my ADHD brain is needs a little reward when I get something right.
+
+## How to use Verbose Mode
+
+```c
+#include "minunit.h"
+
+/* Verbose test */
+MU_TEST_VERBOSE(test_example_verbose) {
+    mu_assert_verbose(1 == 1, "1 should equal 1");
+    mu_assert_verbose(2 == 2, "2 should equal 2");
+    return NULL;  // Indicate success
+}
+
+MU_TEST_SUITE(test_suite) {
+    //   MU_RUN_TEST(test_example);                  // Non-verbose test
+    MU_RUN_TEST_VERBOSE(test_example_verbose);  // Verbose test
+}
+
+int main(void) {
+    MU_RUN_SUITE(test_suite);
+    MU_REPORT_VERBOSE();
+    return MU_EXIT_CODE;
+}
+```
 
 This is a minimal test suite written with minunit:
 
@@ -30,6 +56,23 @@ int main(int argc, char *argv[]) {
 	return MU_EXIT_CODE;
 }
 ```
+Which will produce output similar to:
+
+```
+[TEST] Running test_example_verbose...
+[ASSERTION PASSED] 1 should equal 1
+[ASSERTION PASSED] 2 should equal 2
+[PASS] test_example_verbose
+
+=== Test Summary ===
+Tests run: 1
+Assertions: 2
+Failures: 0
+
+Finished in 223199.39773168 seconds (real) 0.00055337 seconds (proc)
+```
+
+##How to use non-verbose tests
 
 Which will produce the following output:
 
