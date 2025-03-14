@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012 David Siñuela Pastor, siu.4coders@gmail.com
+ * Copyright (c) 2025 David Sewell, david.sewell+minunit@gmail.com
  * 
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -19,6 +20,9 @@
  * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * This file is part of the minunit project, originally created by David Siñuela Pastor.
+ * Modifications were made by David Sewell in 2025.
  */
 #ifndef MINUNIT_MINUNIT_H
 #define MINUNIT_MINUNIT_H
@@ -69,6 +73,15 @@
 #define MINUNIT_MESSAGE_LEN 1024
 /*  Accuracy with which floats are compared */
 #define MINUNIT_EPSILON 1E-12
+/* Verbose report text colors */
+#define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_BOLD          "\x1b[1m"
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
 
 /*  Misc. counters */
 static int minunit_run = 0;
@@ -89,6 +102,7 @@ static void (*minunit_teardown)(void) = NULL;
 
 /*  Definitions */
 #define MU_TEST(method_name) static void method_name(void)
+#define MU_TEST_VERBOSE(method_name) static char* method_name(void)
 #define MU_TEST_SUITE(suite_name) static void suite_name(void)
 
 #define MU__SAFE_BLOCK(block) do {\
@@ -108,6 +122,40 @@ static void (*minunit_teardown)(void) = NULL;
 	minunit_teardown = teardown_fun;\
 )
 
+
+#define MU_RUN_TEST_VERBOSE(test) do { \
+    printf(ANSI_COLOR_YELLOW "[TEST] Running %s\n" ANSI_COLOR_RESET, #test); \
+    char *message = test(); \
+    minunit_run++; \
+    if (message) { \
+        printf(ANSI_COLOR_RED "[FAIL] %s: %s\n" ANSI_COLOR_RESET, #test, message); \
+        minunit_fail++; \
+    } else { \
+        printf(ANSI_COLOR_GREEN "[PASS] %s\n" ANSI_COLOR_RESET, #test); \
+    } \
+} while (0)
+
+/* Verbose assertion */
+#define mu_assert_verbose(test, message) do { \
+    minunit_assert++; \
+    if (!(test)) { \
+        snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message); \
+        minunit_status = 1; \
+        printf(ANSI_COLOR_RED "[ASSERTION FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message); \
+        return minunit_last_message; \
+    } else { \
+        printf(ANSI_COLOR_GREEN "[ASSERTION PASSED] %s\n" ANSI_COLOR_RESET, message); \
+    } \
+} while (0)
+
+/* Verbose test suite */
+#define MU_RUN_SUITE_VERBOSE(suite_name) do { \
+    printf(ANSI_COLOR_YELLOW "[SUITE] Running %s\n" ANSI_COLOR_RESET, #suite_name); \
+    suite_name(); \
+    minunit_setup = NULL; \
+    minunit_teardown = NULL; \
+} while (0)
+
 /*  Test runner */
 #define MU_RUN_TEST(test) MU__SAFE_BLOCK(\
 	if (minunit_real_timer==0 && minunit_proc_timer==0) {\
@@ -126,6 +174,17 @@ static void (*minunit_teardown)(void) = NULL;
 	(void)fflush(stdout);\
 	if (minunit_teardown) (*minunit_teardown)();\
 )
+
+/* Verbose report  */
+#define MU_REPORT_VERBOSE() do { \
+    printf(ANSI_BOLD "\n\n=== Test Summary ===\n" ANSI_COLOR_RESET); \
+    printf(ANSI_COLOR_BLUE "Tests run: %d\n" ANSI_COLOR_RESET, minunit_run); \
+    printf(ANSI_COLOR_MAGENTA "Assertions: %d\n" ANSI_COLOR_RESET, minunit_assert); \
+    printf(ANSI_COLOR_CYAN "Failures: %d\n" ANSI_COLOR_RESET, minunit_fail); \
+    printf(ANSI_BOLD "Finished in %.8f seconds (real) %.8f seconds (proc)\n\n" ANSI_COLOR_RESET, \
+        mu_timer_real() - minunit_real_timer, \
+        mu_timer_cpu() - minunit_proc_timer); \
+} while (0)
 
 /*  Report */
 #define MU_REPORT() MU__SAFE_BLOCK(\
