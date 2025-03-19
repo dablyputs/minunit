@@ -123,17 +123,25 @@ static void (*minunit_teardown)(void) = NULL;
 )
 
 
-#define MU_RUN_TEST_VERBOSE(test) do { \
-    printf(ANSI_COLOR_YELLOW "\n[TEST] Running %s...\n" ANSI_COLOR_RESET, #test); \
+#define MU_RUN_TEST_VERBOSE(test) MU__SAFE_BLOCK( \
+	if (minunit_real_timer==0 && minunit_proc_timer==0) {\
+		minunit_real_timer = mu_timer_real();\
+		minunit_proc_timer = mu_timer_cpu();\
+	}\
+	if (minunit_setup) (*minunit_setup)();\
+	minunit_status = 0;\
+    printf(ANSI_COLOR_YELLOW "[TEST] Running %s\n" ANSI_COLOR_RESET, #test); \
     char *message = test(); \
     minunit_run++; \
     if (message) { \
-        printf(ANSI_COLOR_RED "[FAIL] %s: %s" ANSI_COLOR_RESET, #test, message); \
+        printf(ANSI_COLOR_RED "[FAIL] %s: %s\n" ANSI_COLOR_RESET, #test, message); \
         minunit_fail++; \
     } else { \
-        printf(ANSI_COLOR_GREEN "[PASS] %s" ANSI_COLOR_RESET, #test); \
+        printf(ANSI_COLOR_GREEN "[PASS] %s\n" ANSI_COLOR_RESET, #test); \
     } \
-} while (0)
+	(void)fflush(stdout);\
+	if (minunit_teardown) (*minunit_teardown)();\
+) 
 
 /* Verbose assertion */
 #define mu_assert_verbose(test, message) do { \
@@ -176,15 +184,19 @@ static void (*minunit_teardown)(void) = NULL;
 )
 
 /* Verbose report  */
-#define MU_REPORT_VERBOSE() do { \
+#define MU_REPORT_VERBOSE() MU__SAFE_BLOCK(\
+	double minunit_end_real_timer;\
+	double minunit_end_proc_timer;\
     printf(ANSI_BOLD "\n\n=== Test Summary ===\n" ANSI_COLOR_RESET); \
     printf(ANSI_COLOR_BLUE "Tests run: %d\n" ANSI_COLOR_RESET, minunit_run); \
     printf(ANSI_COLOR_MAGENTA "Assertions: %d\n" ANSI_COLOR_RESET, minunit_assert); \
     printf(ANSI_COLOR_CYAN "Failures: %d\n" ANSI_COLOR_RESET, minunit_fail); \
+	minunit_end_real_timer = mu_timer_real();\
+	minunit_end_proc_timer = mu_timer_cpu();\
     printf(ANSI_BOLD "\nFinished in %.8f seconds (real) %.8f seconds (proc)\n\n" ANSI_COLOR_RESET, \
-        mu_timer_real() - minunit_real_timer, \
-        mu_timer_cpu() - minunit_proc_timer); \
-} while (0)
+		minunit_end_real_timer - minunit_real_timer,\
+		minunit_end_proc_timer - minunit_proc_timer);\
+) 
 
 /*  Report */
 #define MU_REPORT() MU__SAFE_BLOCK(\
@@ -205,9 +217,9 @@ static void (*minunit_teardown)(void) = NULL;
 	if (!(test)) {\
 		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
 		minunit_status = 1;\
-		return;\
+		return 0;\
 	} else {\
-		printf(".");\
+		printf(ANSI_COLOR_GREEN "Passed check!\n" ANSI_COLOR_RESET);\
 	}\
 )
 
@@ -225,7 +237,7 @@ static void (*minunit_teardown)(void) = NULL;
 		minunit_status = 1;\
 		return;\
 	} else {\
-		printf(".");\
+		printf(ANSI_COLOR_GREEN "Assertion: %s passed\n" ANSI_COLR_RESET, test);\
 	}\
 )
 
