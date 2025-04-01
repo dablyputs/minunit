@@ -16,43 +16,131 @@ This fork simply adds a verbose set of test macros with colored output similar t
 
 ## How to use Verbose Mode
 
-This is a short example of the new verbose macro usage:
+The verbose mode provides detailed, color-coded output for each test and assertion. Here's a comprehensive example showing all verbose features:
 
 ```c
 #include "minunit.h"
 
-/* Verbose test */
-MU_TEST_VERBOSE(test_example_verbose) {
-    mu_assert_verbose(1 == 1, "1 should equal 1");
-    mu_assert_verbose(2 == 2, "2 should equal 2");
+/* Basic verbose test */
+MU_TEST_VERBOSE(test_basic_verbose) {
+    mu_assert_verbose(1 == 1, "Basic assertion should pass");
     return NULL;  // Indicate success
 }
 
-MU_TEST_SUITE(test_suite) {
-    MU_RUN_TEST_VERBOSE(test_example_verbose);  // Verbose test
+/* Integer comparison test */
+MU_TEST_VERBOSE(test_int_comparison_verbose) {
+    int expected = 42;
+    int actual = 42;
+    mu_assert_int_eq_verbose(expected, actual);
+    return NULL;
+}
+
+/* Double comparison test */
+MU_TEST_VERBOSE(test_double_comparison_verbose) {
+    double expected = 3.14159;
+    double actual = 3.14159;
+    mu_assert_double_eq_verbose(expected, actual);
+    return NULL;
+}
+
+/* String comparison test */
+MU_TEST_VERBOSE(test_string_comparison_verbose) {
+    const char* expected = "Hello, World!";
+    const char* actual = "Hello, World!";
+    mu_assert_string_eq_verbose(expected, actual);
+    return NULL;
+}
+
+/* Basic check test */
+MU_TEST_VERBOSE(test_check_verbose) {
+    mu_check_verbose(1 == 1);
+    return NULL;
+}
+
+/* Explicit failure test */
+MU_TEST_VERBOSE(test_failure_verbose) {
+    mu_fail_verbose("This test is designed to fail");
+    return NULL;
+}
+
+/* Test suite with setup and teardown */
+static void setup(void) {
+    printf(ANSI_COLOR_CYAN "[SETUP] Running test setup\n" ANSI_COLOR_RESET);
+}
+
+static void teardown(void) {
+    printf(ANSI_COLOR_CYAN "[TEARDOWN] Running test teardown\n" ANSI_COLOR_RESET);
+}
+
+/* Test suite that runs all verbose tests */
+MU_TEST_SUITE(test_suite_verbose) {
+    /* Configure setup and teardown for the suite */
+    MU_SUITE_CONFIGURE(setup, teardown);
+    
+    /* Run all verbose tests */
+    MU_RUN_TEST_VERBOSE(test_basic_verbose);
+    MU_RUN_TEST_VERBOSE(test_int_comparison_verbose);
+    MU_RUN_TEST_VERBOSE(test_double_comparison_verbose);
+    MU_RUN_TEST_VERBOSE(test_string_comparison_verbose);
+    MU_RUN_TEST_VERBOSE(test_check_verbose);
+    MU_RUN_TEST_VERBOSE(test_failure_verbose);
 }
 
 int main(void) {
-    MU_RUN_SUITE(test_suite);
+    /* Run the verbose test suite */
+    MU_RUN_SUITE_VERBOSE(test_suite_verbose);
+    
+    /* Generate verbose report */
     MU_REPORT_VERBOSE();
+    
     return MU_EXIT_CODE;
 }
 ```
 
-Which will produce color (cannot be displayed on github) output similar to:
+## Verbose Assertion Types
+
+The verbose mode provides the following assertion types with detailed output:
+
+- `mu_assert_verbose(condition, message)`: Basic assertion with pass/fail message
+- `mu_check_verbose(condition)`: Simple condition check with pass/fail output
+- `mu_assert_int_eq_verbose(expected, result)`: Integer comparison with value details
+- `mu_assert_double_eq_verbose(expected, result)`: Double comparison with value details
+- `mu_assert_string_eq_verbose(expected, result)`: String comparison with value details
+- `mu_fail_verbose(message)`: Explicit failure with custom message
+
+## Verbose Test Suite Features
+
+- `MU_TEST_VERBOSE(test_name)`: Define a verbose test function
+- `MU_RUN_TEST_VERBOSE(test)`: Run a verbose test
+- `MU_RUN_SUITE_VERBOSE(suite_name)`: Run a verbose test suite
+- `MU_REPORT_VERBOSE()`: Generate a verbose test report
+- `MU_SUITE_CONFIGURE(setup, teardown)`: Configure setup/teardown for verbose tests
+
+## Output Format
+
+The verbose mode produces color-coded output (not shown in GitHub):
 
 ```
-[TEST] Running test_example_verbose...
-[ASSERTION PASSED] 1 should equal 1
-[ASSERTION PASSED] 2 should equal 2
-[PASS] test_example_verbose
+[TEST] Running test_basic_verbose...
+[ASSERTION PASSED] Basic assertion should pass
+[PASS] test_basic_verbose
+
+[TEST] Running test_int_comparison_verbose...
+[INTEGER COMPARISON PASSED] expected 42, got 42
+[PASS] test_int_comparison_verbose
+
+[SETUP] Running test setup
+[TEST] Running test_double_comparison_verbose...
+[DOUBLE COMPARISON PASSED] expected 3.14159, got 3.14159
+[PASS] test_double_comparison_verbose
+[TEARDOWN] Running test teardown
 
 === Test Summary ===
-Tests run: 1
-Assertions: 2
-Failures: 0
+Tests run: 7
+Assertions: 7
+Failures: 1
 
-Finished in 223199.39773168 seconds (real) 0.00055337 seconds (proc)
+Finished in 0.00012345 seconds (real) 0.00009876 seconds (proc)
 ```
 
 ## How to use non-verbose tests
@@ -62,27 +150,26 @@ This is a minimal test suite written with minunit:
 ```c
 #include "minunit.h"
 
-MU_TEST(test_check) _check(5 == 7);
+MU_TEST(test_check) {
+    mu_check(5 == 7);
 }
 MU_TEST_SUITE(test_suite) {
-	MU_RUN_TEST(test_check);
+    MU_RUN_TEST(test_check);
 }
 
 int main(int argc, char *argv[]) {
-	MU_RUN_SUITE(test_suite);
-	MU_REPORT();
-	return MU_EXIT_CODE;
+    MU_RUN_SUITE(test_suite);
+    MU_REPORT();
+    return MU_EXIT_CODE;
 }
 ```
-
 
 Which will produce the following output:
 
 ```
 F
 test_check failed:
-	readme_sample.c:4: 5 == 7
-
+    readme_sample.c:4: 5 == 7
 
 1 tests, 1 assertions, 1 failures
 
@@ -122,8 +209,9 @@ equal or show their values as the error message
 are almost equal or show their values as the error message. The value of
 `MINUNIT_EPSILON` sets the threshold to determine if the values are close enough.
 
-`mu_assert_string_eq(expected, resurt):` it will pass if the two strings are equal.
+`mu_assert_string_eq(expected, result)`: it will pass if the two strings are equal.
 
 ## Authors
 
 David Siñuela Pastor <siu.4coders@gmail.com>
+David Sewell <david.sewell+minunit@gmail.com>
