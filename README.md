@@ -121,26 +121,54 @@ The verbose mode provides the following assertion types with detailed output:
 The verbose mode produces color-coded output (not shown in GitHub):
 
 ```
-[TEST] Running test_basic_verbose...
+[SUITE] Running test_suite_verbose
+[SETUP] Running test setup
+[TEST] Running test_basic_verbose
 [ASSERTION PASSED] Basic assertion should pass
 [PASS] test_basic_verbose
-
-[TEST] Running test_int_comparison_verbose...
+[TEARDOWN] Running test teardown
+[SETUP] Running test setup
+[TEST] Running test_int_comparison_verbose
 [INTEGER COMPARISON PASSED] expected 42, got 42
 [PASS] test_int_comparison_verbose
-
+[TEARDOWN] Running test teardown
 [SETUP] Running test setup
-[TEST] Running test_double_comparison_verbose...
+[TEST] Running test_double_comparison_verbose
 [DOUBLE COMPARISON PASSED] expected 3.14159, got 3.14159
 [PASS] test_double_comparison_verbose
 [TEARDOWN] Running test teardown
+[SETUP] Running test setup
+[TEST] Running test_string_comparison_verbose
+[STRING COMPARISON PASSED] expected 'Hello, World!', got 'Hello, World!'
+[PASS] test_string_comparison_verbose
+[TEARDOWN] Running test teardown
+[SETUP] Running test setup
+[TEST] Running test_check_verbose
+[CHECK PASSED] 1 == 1
+[PASS] test_check_verbose
+[TEARDOWN] Running test teardown
+[SETUP] Running test setup
+[TEST] Running test_failure_verbose
+[FAIL] test_failure_verbose failed:
+	verbose_minunit_example.c:41: This test is designed to fail
+[FAIL] test_failure_verbose: test_failure_verbose failed:
+	verbose_minunit_example.c:41: This test is designed to fail
+[TEARDOWN] Running test teardown
+[SETUP] Running test setup
+[TEST] Running test_failing_assertions_verbose
+[INTEGER COMPARISON FAILED] test_failing_assertions_verbose failed:
+	verbose_minunit_example.c:47: expected 42 but got 43
+[FAIL] test_failing_assertions_verbose: test_failing_assertions_verbose failed:
+	verbose_minunit_example.c:47: expected 42 but got 43
+[TEARDOWN] Running test teardown
+
 
 === Test Summary ===
 Tests run: 7
 Assertions: 7
-Failures: 1
+Failures: 2
 
-Finished in 0.00012345 seconds (real) 0.00009876 seconds (proc)
+Finished in 0.00009029 seconds (real) 0.00008979 seconds (proc)
 ```
 
 ## How to use non-verbose tests
