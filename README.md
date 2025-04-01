@@ -241,5 +241,5 @@ are almost equal or show their values as the error message. The value of
 
 ## Authors
 
-David Siñuela Pastor <siu.4coders@gmail.com>
+David Siñuela Pastor <siu.4coders@gmail.com>  
 David Sewell <david.sewell+minunit@gmail.com>
