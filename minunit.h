@@ -27,6 +27,15 @@
 #ifndef MINUNIT_MINUNIT_H
 #define MINUNIT_MINUNIT_H
 
+/* Feature test macros must come before any includes */
+#if !defined(_POSIX_C_SOURCE) || _POSIX_C_SOURCE < 200809L
+#define _POSIX_C_SOURCE 200809L
+#endif
+
+#if !defined(_XOPEN_SOURCE) || _XOPEN_SOURCE < 700
+#define _XOPEN_SOURCE 700
+#endif
+
 #ifdef __cplusplus
 	extern "C" {
 #endif
@@ -40,18 +49,18 @@
 
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
 
-/* Change POSIX C SOURCE version for pure c99 compilers */
-#if !defined(_POSIX_C_SOURCE) || _POSIX_C_SOURCE < 200112L
-#undef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200112L
-#endif
-
 #include <unistd.h>	/* POSIX flags */
 #include <time.h>	/* clock_gettime(), time() */
 #include <sys/time.h>	/* gethrtime(), gettimeofday() */
 #include <sys/resource.h>
 #include <sys/times.h>
 #include <string.h>
+
+/* Define clockid_t if it's not available */
+#ifndef _CLOCKID_T_DEFINED_
+#define _CLOCKID_T_DEFINED_
+typedef int clockid_t;
+#endif
 
 #if defined(__MACH__) && defined(__APPLE__)
 #include <mach/mach.h>
@@ -144,17 +153,17 @@ static void (*minunit_teardown)(void) = NULL;
 ) 
 
 /* Verbose assertion */
-#define mu_assert_verbose(test, message) do { \
-    minunit_assert++; \
-    if (!(test)) { \
-        snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message); \
-        minunit_status = 1; \
-        printf(ANSI_COLOR_RED "[ASSERTION FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message); \
-        return minunit_last_message; \
-    } else { \
-        printf(ANSI_COLOR_GREEN "[ASSERTION PASSED] %s\n" ANSI_COLOR_RESET, message); \
-    } \
-} while (0)
+#define mu_assert_verbose(test, message) MU__SAFE_BLOCK(\
+    minunit_assert++;\
+    if (!(test)) {\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[ASSERTION FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[ASSERTION PASSED] %s\n" ANSI_COLOR_RESET, message);\
+    }\
+)
 
 /* Verbose test suite */
 #define MU_RUN_SUITE_VERBOSE(suite_name) do { \
@@ -213,47 +222,50 @@ static void (*minunit_teardown)(void) = NULL;
 
 /*  Assertions */
 #define mu_check(test) MU__SAFE_BLOCK(\
-	minunit_assert++;\
-	if (!(test)) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
-		minunit_status = 1;\
-		return 0;\
-	} else {\
-		printf(ANSI_COLOR_GREEN "Passed check!\n" ANSI_COLOR_RESET);\
-	}\
+    minunit_assert++;\
+    if (!(test)) {\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[CHECK FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[CHECK PASSED] %s\n" ANSI_COLOR_RESET, #test);\
+    }\
 )
 
 #define mu_fail(message) MU__SAFE_BLOCK(\
 	minunit_assert++;\
 	(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
 	minunit_status = 1;\
-	return;\
+	return minunit_last_message;\
 )
 
 #define mu_assert(test, message) MU__SAFE_BLOCK(\
-	minunit_assert++;\
-	if (!(test)) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(ANSI_COLOR_GREEN "Assertion: %s passed\n" ANSI_COLR_RESET, test);\
-	}\
+    minunit_assert++;\
+    if (!(test)) {\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[ASSERTION FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[ASSERTION PASSED] %s\n" ANSI_COLOR_RESET, message);\
+    }\
 )
 
 #define mu_assert_int_eq(expected, result) MU__SAFE_BLOCK(\
-	int minunit_tmp_e;\
-	int minunit_tmp_r;\
-	minunit_assert++;\
-	minunit_tmp_e = (expected);\
-	minunit_tmp_r = (result);\
-	if (minunit_tmp_e != minunit_tmp_r) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %d expected but was %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
+    int minunit_tmp_e;\
+    int minunit_tmp_r;\
+    minunit_assert++;\
+    minunit_tmp_e = (expected);\
+    minunit_tmp_r = (result);\
+    if (minunit_tmp_e != minunit_tmp_r) {\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: expected %d but got %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[INTEGER COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[INTEGER COMPARISON PASSED] expected %d, got %d\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
+    }\
 )
 
 #define mu_assert_double_eq(expected, result) MU__SAFE_BLOCK(\
@@ -289,6 +301,80 @@ static void (*minunit_teardown)(void) = NULL;
 	} else {\
 		printf(".");\
 	}\
+)
+
+/* Verbose assertions */
+#define mu_check_verbose(test) MU__SAFE_BLOCK(\
+    minunit_assert++;\
+    if (!(test)) {\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[CHECK FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[CHECK PASSED] %s\n" ANSI_COLOR_RESET, #test);\
+    }\
+)
+
+#define mu_assert_int_eq_verbose(expected, result) MU__SAFE_BLOCK(\
+    int minunit_tmp_e;\
+    int minunit_tmp_r;\
+    minunit_assert++;\
+    minunit_tmp_e = (expected);\
+    minunit_tmp_r = (result);\
+    if (minunit_tmp_e != minunit_tmp_r) {\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: expected %d but got %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[INTEGER COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[INTEGER COMPARISON PASSED] expected %d, got %d\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
+    }\
+)
+
+#define mu_fail_verbose(message) MU__SAFE_BLOCK(\
+    minunit_assert++;\
+    (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
+    minunit_status = 1;\
+    printf(ANSI_COLOR_RED "[FAIL] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+    return minunit_last_message;\
+)
+
+#define mu_assert_double_eq_verbose(expected, result) MU__SAFE_BLOCK(\
+    double minunit_tmp_e;\
+    double minunit_tmp_r;\
+    minunit_assert++;\
+    minunit_tmp_e = (expected);\
+    minunit_tmp_r = (result);\
+    if (fabs(minunit_tmp_e-minunit_tmp_r) > MINUNIT_EPSILON) {\
+        int minunit_significant_figures = 1 - log10(MINUNIT_EPSILON);\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %.*g expected but was %.*g", __func__, __FILE__, __LINE__, minunit_significant_figures, minunit_tmp_e, minunit_significant_figures, minunit_tmp_r);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[DOUBLE COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[DOUBLE COMPARISON PASSED] expected %g, got %g\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
+    }\
+)
+
+#define mu_assert_string_eq_verbose(expected, result) MU__SAFE_BLOCK(\
+    const char* minunit_tmp_e = expected;\
+    const char* minunit_tmp_r = result;\
+    minunit_assert++;\
+    if (!minunit_tmp_e) {\
+        minunit_tmp_e = "<null pointer>";\
+    }\
+    if (!minunit_tmp_r) {\
+        minunit_tmp_r = "<null pointer>";\
+    }\
+    if(strcmp(minunit_tmp_e, minunit_tmp_r) != 0) {\
+        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: '%s' expected but was '%s'", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
+        minunit_status = 1;\
+        printf(ANSI_COLOR_RED "[STRING COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
+        return minunit_last_message;\
+    } else {\
+        printf(ANSI_COLOR_GREEN "[STRING COMPARISON PASSED] expected '%s', got '%s'\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
+    }\
 )
 
 /*
