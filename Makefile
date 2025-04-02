@@ -22,11 +22,11 @@ jtn002_example: examples/jtn002_example.c
 # Run examples
 run: all
 	@echo "\nRunning basic example:"
-	@./minunit_example
+	-@./minunit_example
 	@echo "\nRunning verbose example:"
-	@./verbose_minunit_example
+	-@./verbose_minunit_example
 	@echo "\nRunning jtn002 example:"
-	@./jtn002_example
+	-@./jtn002_example
 
 # Clean build files
 clean:
