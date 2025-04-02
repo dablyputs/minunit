@@ -2,13 +2,18 @@
 
 Minunit is a minimal unit testing framework for C/C++ with a modular design and colored output support.
 
+I've included the original code written by John Brewer when he described his idea for a mininal C unit test framework that uses no memory allocation and should "work fine under almost any circumstance" and which could be used to do unit testing in a constrained environment such as an embedded system written in C such as a BIOS, EEPROM, etc. Link: https://jera.com/techinfo/jtns/jtn002 
+
+My changes add explicit feature test macro definitons and moved extended functionality to extension files. I've included previous versions in order to display how a simple unit test framwork can evlolve and be customized. My changes add verbose output with color coding based on check50 from the CS50 Intro to Computer Science course at Harvard. This is a learning project.
+
+
 ## Features
 
-- Single header core (`minunit.h`)
+- Single header core (`minunit.h`) 
 - Extensions (created by David Sewell):
   - Modular extensions system
   - Colored verbose output mode
-  - JTN002 compatibility mode
+  - JTN002 original code from John Brewer
   - Built-in timing utilities
   - Cross-platform support
   - No external dependencies
