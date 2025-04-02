@@ -78,29 +78,36 @@ typedef int clockid_t;
 #include <stdio.h>
 #include <math.h>
 
+/**
+ * Macro to silence unused parameter warnings.
+ * 
+ * This macro is used to explicitly mark parameters as intentionally unused.
+ * It works by casting the parameter to void, which is a no-op but tells the
+ * compiler we're aware the parameter is unused.
+ * 
+ * Usage:
+ *   void function(int used, int unused) {
+ *       UNUSED(unused);  // Silence warning about unused parameter
+ *       printf("%d\n", used);
+ *   }
+ * 
+ * Benefits:
+ * - Works with any C compiler
+ * - Can be used with function pointers
+ * - Can be used anywhere in the function body
+ * - Makes intent clear to other developers
+ * - Can be used for unused variables too
+ */
+#define UNUSED(x) ((void)(x))
+
 /*  Maximum length of last message */
 #define MINUNIT_MESSAGE_LEN 1024
-/*  Accuracy with which floats are compared */
-#define MINUNIT_EPSILON 1E-12
-/* Verbose report text colors */
-#define ANSI_COLOR_RESET   "\x1b[0m"
-#define ANSI_BOLD          "\x1b[1m"
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
 
 /*  Misc. counters */
 static int minunit_run = 0;
 static int minunit_assert = 0;
 static int minunit_fail = 0;
 static int minunit_status = 0;
-
-/*  Timers */
-static double minunit_real_timer = 0;
-static double minunit_proc_timer = 0;
 
 /*  Last message */
 static char minunit_last_message[MINUNIT_MESSAGE_LEN];
@@ -111,133 +118,65 @@ static void (*minunit_teardown)(void) = NULL;
 
 /*  Definitions */
 #define MU_TEST(method_name) static void method_name(void)
-#define MU_TEST_VERBOSE(method_name) static char* method_name(void)
 #define MU_TEST_SUITE(suite_name) static void suite_name(void)
 
 #define MU__SAFE_BLOCK(block) do {\
-	block\
+    block\
 } while(0)
 
 /*  Run test suite and unset setup and teardown functions */
 #define MU_RUN_SUITE(suite_name) MU__SAFE_BLOCK(\
-	suite_name();\
-	minunit_setup = NULL;\
-	minunit_teardown = NULL;\
+    suite_name();\
+    minunit_setup = NULL;\
+    minunit_teardown = NULL;\
 )
 
 /*  Configure setup and teardown functions */
 #define MU_SUITE_CONFIGURE(setup_fun, teardown_fun) MU__SAFE_BLOCK(\
-	minunit_setup = setup_fun;\
-	minunit_teardown = teardown_fun;\
+    minunit_setup = setup_fun;\
+    minunit_teardown = teardown_fun;\
 )
-
-
-#define MU_RUN_TEST_VERBOSE(test) MU__SAFE_BLOCK( \
-	if (minunit_real_timer==0 && minunit_proc_timer==0) {\
-		minunit_real_timer = mu_timer_real();\
-		minunit_proc_timer = mu_timer_cpu();\
-	}\
-	if (minunit_setup) (*minunit_setup)();\
-	minunit_status = 0;\
-    printf(ANSI_COLOR_YELLOW "[TEST] Running %s\n" ANSI_COLOR_RESET, #test); \
-    char *message = test(); \
-    minunit_run++; \
-    if (message) { \
-        printf(ANSI_COLOR_RED "[FAIL] %s: %s\n" ANSI_COLOR_RESET, #test, message); \
-        minunit_fail++; \
-    } else { \
-        printf(ANSI_COLOR_GREEN "[PASS] %s\n" ANSI_COLOR_RESET, #test); \
-    } \
-	(void)fflush(stdout);\
-	if (minunit_teardown) (*minunit_teardown)();\
-) 
-
-/* Verbose assertion */
-#define mu_assert_verbose(test, message) MU__SAFE_BLOCK(\
-    minunit_assert++;\
-    if (!(test)) {\
-        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
-        minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[ASSERTION FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
-    } else {\
-        printf(ANSI_COLOR_GREEN "[ASSERTION PASSED] %s\n" ANSI_COLOR_RESET, message);\
-    }\
-)
-
-/* Verbose test suite */
-#define MU_RUN_SUITE_VERBOSE(suite_name) do { \
-    printf(ANSI_COLOR_YELLOW "[SUITE] Running %s\n" ANSI_COLOR_RESET, #suite_name); \
-    suite_name(); \
-    minunit_setup = NULL; \
-    minunit_teardown = NULL; \
-} while (0)
 
 /*  Test runner */
 #define MU_RUN_TEST(test) MU__SAFE_BLOCK(\
-	if (minunit_real_timer==0 && minunit_proc_timer==0) {\
-		minunit_real_timer = mu_timer_real();\
-		minunit_proc_timer = mu_timer_cpu();\
-	}\
-	if (minunit_setup) (*minunit_setup)();\
-	minunit_status = 0;\
-	test();\
-	minunit_run++;\
-	if (minunit_status) {\
-		minunit_fail++;\
-		printf("F");\
-		printf("\n%s\n", minunit_last_message);\
-	}\
-	(void)fflush(stdout);\
-	if (minunit_teardown) (*minunit_teardown)();\
+    if (minunit_setup) (*minunit_setup)();\
+    minunit_status = 0;\
+    test();\
+    minunit_run++;\
+    if (minunit_status) {\
+        minunit_fail++;\
+        printf("F");\
+        printf("\n%s\n", minunit_last_message);\
+    }\
+    (void)fflush(stdout);\
+    if (minunit_teardown) (*minunit_teardown)();\
 )
-
-/* Verbose report  */
-#define MU_REPORT_VERBOSE() MU__SAFE_BLOCK(\
-	double minunit_end_real_timer;\
-	double minunit_end_proc_timer;\
-    printf(ANSI_BOLD "\n\n=== Test Summary ===\n" ANSI_COLOR_RESET); \
-    printf(ANSI_COLOR_BLUE "Tests run: %d\n" ANSI_COLOR_RESET, minunit_run); \
-    printf(ANSI_COLOR_MAGENTA "Assertions: %d\n" ANSI_COLOR_RESET, minunit_assert); \
-    printf(ANSI_COLOR_CYAN "Failures: %d\n" ANSI_COLOR_RESET, minunit_fail); \
-	minunit_end_real_timer = mu_timer_real();\
-	minunit_end_proc_timer = mu_timer_cpu();\
-    printf(ANSI_BOLD "\nFinished in %.8f seconds (real) %.8f seconds (proc)\n\n" ANSI_COLOR_RESET, \
-		minunit_end_real_timer - minunit_real_timer,\
-		minunit_end_proc_timer - minunit_proc_timer);\
-) 
 
 /*  Report */
 #define MU_REPORT() MU__SAFE_BLOCK(\
-	double minunit_end_real_timer;\
-	double minunit_end_proc_timer;\
-	printf("\n\n%d tests, %d assertions, %d failures\n", minunit_run, minunit_assert, minunit_fail);\
-	minunit_end_real_timer = mu_timer_real();\
-	minunit_end_proc_timer = mu_timer_cpu();\
-	printf("\nFinished in %.8f seconds (real) %.8f seconds (proc)\n\n",\
-		minunit_end_real_timer - minunit_real_timer,\
-		minunit_end_proc_timer - minunit_proc_timer);\
+    printf("\n\n%d tests, %d assertions, %d failures\n", minunit_run, minunit_assert, minunit_fail);\
 )
+
+/* Exit code for test programs */
 #define MU_EXIT_CODE minunit_fail
 
-/*  Assertions */
+/*  Basic assertions */
 #define mu_check(test) MU__SAFE_BLOCK(\
     minunit_assert++;\
     if (!(test)) {\
         (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
         minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[CHECK FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
+        printf("[CHECK FAILED] %s\n", minunit_last_message);\
     } else {\
-        printf(ANSI_COLOR_GREEN "[CHECK PASSED] %s\n" ANSI_COLOR_RESET, #test);\
+        printf("[CHECK PASSED] %s\n", #test);\
     }\
 )
 
 #define mu_fail(message) MU__SAFE_BLOCK(\
-	minunit_assert++;\
-	(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
-	minunit_status = 1;\
-	return minunit_last_message;\
+    minunit_assert++;\
+    (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
+    minunit_status = 1;\
+    printf("[FAIL] %s\n", minunit_last_message);\
 )
 
 #define mu_assert(test, message) MU__SAFE_BLOCK(\
@@ -245,304 +184,14 @@ static void (*minunit_teardown)(void) = NULL;
     if (!(test)) {\
         (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
         minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[ASSERTION FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
+        printf("[ASSERTION FAILED] %s\n", minunit_last_message);\
     } else {\
-        printf(ANSI_COLOR_GREEN "[ASSERTION PASSED] %s\n" ANSI_COLOR_RESET, message);\
+        printf("[ASSERTION PASSED] %s\n", message);\
     }\
 )
-
-#define mu_assert_int_eq(expected, result) MU__SAFE_BLOCK(\
-    int minunit_tmp_e;\
-    int minunit_tmp_r;\
-    minunit_assert++;\
-    minunit_tmp_e = (expected);\
-    minunit_tmp_r = (result);\
-    if (minunit_tmp_e != minunit_tmp_r) {\
-        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: expected %d but got %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
-        minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[INTEGER COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
-    } else {\
-        printf(ANSI_COLOR_GREEN "[INTEGER COMPARISON PASSED] expected %d, got %d\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
-    }\
-)
-
-#define mu_assert_double_eq(expected, result) MU__SAFE_BLOCK(\
-	double minunit_tmp_e;\
-	double minunit_tmp_r;\
-	minunit_assert++;\
-	minunit_tmp_e = (expected);\
-	minunit_tmp_r = (result);\
-	if (fabs(minunit_tmp_e-minunit_tmp_r) > MINUNIT_EPSILON) {\
-		int minunit_significant_figures = 1 - log10(MINUNIT_EPSILON);\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %.*g expected but was %.*g", __func__, __FILE__, __LINE__, minunit_significant_figures, minunit_tmp_e, minunit_significant_figures, minunit_tmp_r);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
-)
-
-#define mu_assert_string_eq(expected, result) MU__SAFE_BLOCK(\
-	const char* minunit_tmp_e = expected;\
-	const char* minunit_tmp_r = result;\
-	minunit_assert++;\
-	if (!minunit_tmp_e) {\
-		minunit_tmp_e = "<null pointer>";\
-	}\
-	if (!minunit_tmp_r) {\
-		minunit_tmp_r = "<null pointer>";\
-	}\
-	if(strcmp(minunit_tmp_e, minunit_tmp_r) != 0) {\
-		(void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: '%s' expected but was '%s'", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
-		minunit_status = 1;\
-		return;\
-	} else {\
-		printf(".");\
-	}\
-)
-
-/* Verbose assertions */
-#define mu_check_verbose(test) MU__SAFE_BLOCK(\
-    minunit_assert++;\
-    if (!(test)) {\
-        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, #test);\
-        minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[CHECK FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
-    } else {\
-        printf(ANSI_COLOR_GREEN "[CHECK PASSED] %s\n" ANSI_COLOR_RESET, #test);\
-    }\
-)
-
-#define mu_assert_int_eq_verbose(expected, result) MU__SAFE_BLOCK(\
-    int minunit_tmp_e;\
-    int minunit_tmp_r;\
-    minunit_assert++;\
-    minunit_tmp_e = (expected);\
-    minunit_tmp_r = (result);\
-    if (minunit_tmp_e != minunit_tmp_r) {\
-        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: expected %d but got %d", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
-        minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[INTEGER COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
-    } else {\
-        printf(ANSI_COLOR_GREEN "[INTEGER COMPARISON PASSED] expected %d, got %d\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
-    }\
-)
-
-#define mu_fail_verbose(message) MU__SAFE_BLOCK(\
-    minunit_assert++;\
-    (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %s", __func__, __FILE__, __LINE__, message);\
-    minunit_status = 1;\
-    printf(ANSI_COLOR_RED "[FAIL] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-    return minunit_last_message;\
-)
-
-#define mu_assert_double_eq_verbose(expected, result) MU__SAFE_BLOCK(\
-    double minunit_tmp_e;\
-    double minunit_tmp_r;\
-    minunit_assert++;\
-    minunit_tmp_e = (expected);\
-    minunit_tmp_r = (result);\
-    if (fabs(minunit_tmp_e-minunit_tmp_r) > MINUNIT_EPSILON) {\
-        int minunit_significant_figures = 1 - log10(MINUNIT_EPSILON);\
-        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: %.*g expected but was %.*g", __func__, __FILE__, __LINE__, minunit_significant_figures, minunit_tmp_e, minunit_significant_figures, minunit_tmp_r);\
-        minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[DOUBLE COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
-    } else {\
-        printf(ANSI_COLOR_GREEN "[DOUBLE COMPARISON PASSED] expected %g, got %g\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
-    }\
-)
-
-#define mu_assert_string_eq_verbose(expected, result) MU__SAFE_BLOCK(\
-    const char* minunit_tmp_e = expected;\
-    const char* minunit_tmp_r = result;\
-    minunit_assert++;\
-    if (!minunit_tmp_e) {\
-        minunit_tmp_e = "<null pointer>";\
-    }\
-    if (!minunit_tmp_r) {\
-        minunit_tmp_r = "<null pointer>";\
-    }\
-    if(strcmp(minunit_tmp_e, minunit_tmp_r) != 0) {\
-        (void)snprintf(minunit_last_message, MINUNIT_MESSAGE_LEN, "%s failed:\n\t%s:%d: '%s' expected but was '%s'", __func__, __FILE__, __LINE__, minunit_tmp_e, minunit_tmp_r);\
-        minunit_status = 1;\
-        printf(ANSI_COLOR_RED "[STRING COMPARISON FAILED] %s\n" ANSI_COLOR_RESET, minunit_last_message);\
-        return minunit_last_message;\
-    } else {\
-        printf(ANSI_COLOR_GREEN "[STRING COMPARISON PASSED] expected '%s', got '%s'\n" ANSI_COLOR_RESET, minunit_tmp_e, minunit_tmp_r);\
-    }\
-)
-
-/*
- * The following two functions were written by David Robert Nadeau
- * from http://NadeauSoftware.com/ and distributed under the
- * Creative Commons Attribution 3.0 Unported License
- */
-
-/**
- * Returns the real time, in seconds, or -1.0 if an error occurred.
- *
- * Time is measured since an arbitrary and OS-dependent start time.
- * The returned real time is only useful for computing an elapsed time
- * between two calls to this function.
- */
-static double mu_timer_real(void)
-{
-#if defined(_WIN32)
-	/* Windows 2000 and later. ---------------------------------- */
-	LARGE_INTEGER Time;
-	LARGE_INTEGER Frequency;
-	
-	QueryPerformanceFrequency(&Frequency);
-	QueryPerformanceCounter(&Time);
-	
-	Time.QuadPart *= 1000000;
-	Time.QuadPart /= Frequency.QuadPart;
-	
-	return (double)Time.QuadPart / 1000000.0;
-
-#elif (defined(__hpux) || defined(hpux)) || ((defined(__sun__) || defined(__sun) || defined(sun)) && (defined(__SVR4) || defined(__svr4__)))
-	/* HP-UX, Solaris. ------------------------------------------ */
-	return (double)gethrtime( ) / 1000000000.0;
-
-#elif defined(__MACH__) && defined(__APPLE__)
-	/* OSX. ----------------------------------------------------- */
-	static double timeConvert = 0.0;
-	if ( timeConvert == 0.0 )
-	{
-		mach_timebase_info_data_t timeBase;
-		(void)mach_timebase_info( &timeBase );
-		timeConvert = (double)timeBase.numer /
-			(double)timeBase.denom /
-			1000000000.0;
-	}
-	return (double)mach_absolute_time( ) * timeConvert;
-
-#elif defined(_POSIX_VERSION)
-	/* POSIX. --------------------------------------------------- */
-	struct timeval tm;
-#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
-	{
-		struct timespec ts;
-#if defined(CLOCK_MONOTONIC_PRECISE)
-		/* BSD. --------------------------------------------- */
-		const clockid_t id = CLOCK_MONOTONIC_PRECISE;
-#elif defined(CLOCK_MONOTONIC_RAW)
-		/* Linux. ------------------------------------------- */
-		const clockid_t id = CLOCK_MONOTONIC_RAW;
-#elif defined(CLOCK_HIGHRES)
-		/* Solaris. ----------------------------------------- */
-		const clockid_t id = CLOCK_HIGHRES;
-#elif defined(CLOCK_MONOTONIC)
-		/* AIX, BSD, Linux, POSIX, Solaris. ----------------- */
-		const clockid_t id = CLOCK_MONOTONIC;
-#elif defined(CLOCK_REALTIME)
-		/* AIX, BSD, HP-UX, Linux, POSIX. ------------------- */
-		const clockid_t id = CLOCK_REALTIME;
-#else
-		const clockid_t id = (clockid_t)-1;	/* Unknown. */
-#endif /* CLOCK_* */
-		if ( id != (clockid_t)-1 && clock_gettime( id, &ts ) != -1 )
-			return (double)ts.tv_sec +
-				(double)ts.tv_nsec / 1000000000.0;
-		/* Fall thru. */
-	}
-#endif /* _POSIX_TIMERS */
-
-	/* AIX, BSD, Cygwin, HP-UX, Linux, OSX, POSIX, Solaris. ----- */
-	gettimeofday( &tm, NULL );
-	return (double)tm.tv_sec + (double)tm.tv_usec / 1000000.0;
-#else
-	return -1.0;		/* Failed. */
-#endif
-}
-
-/**
- * Returns the amount of CPU time used by the current process,
- * in seconds, or -1.0 if an error occurred.
- */
-static double mu_timer_cpu(void)
-{
-#if defined(_WIN32)
-	/* Windows -------------------------------------------------- */
-	FILETIME createTime;
-	FILETIME exitTime;
-	FILETIME kernelTime;
-	FILETIME userTime;
-
-	/* This approach has a resolution of 1/64 second. Unfortunately, Windows' API does not offer better */
-	if ( GetProcessTimes( GetCurrentProcess( ),
-		&createTime, &exitTime, &kernelTime, &userTime ) != 0 )
-	{
-		ULARGE_INTEGER userSystemTime;
-		memcpy(&userSystemTime, &userTime, sizeof(ULARGE_INTEGER));
-		return (double)userSystemTime.QuadPart / 10000000.0;
-	}
-
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-	/* AIX, BSD, Cygwin, HP-UX, Linux, OSX, and Solaris --------- */
-
-#if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
-	/* Prefer high-res POSIX timers, when available. */
-	{
-		clockid_t id;
-		struct timespec ts;
-#if _POSIX_CPUTIME > 0
-		/* Clock ids vary by OS.  Query the id, if possible. */
-		if ( clock_getcpuclockid( 0, &id ) == -1 )
-#endif
-#if defined(CLOCK_PROCESS_CPUTIME_ID)
-			/* Use known clock id for AIX, Linux, or Solaris. */
-			id = CLOCK_PROCESS_CPUTIME_ID;
-#elif defined(CLOCK_VIRTUAL)
-			/* Use known clock id for BSD or HP-UX. */
-			id = CLOCK_VIRTUAL;
-#else
-			id = (clockid_t)-1;
-#endif
-		if ( id != (clockid_t)-1 && clock_gettime( id, &ts ) != -1 )
-			return (double)ts.tv_sec +
-				(double)ts.tv_nsec / 1000000000.0;
-	}
-#endif
-
-#if defined(RUSAGE_SELF)
-	{
-		struct rusage rusage;
-		if ( getrusage( RUSAGE_SELF, &rusage ) != -1 )
-			return (double)rusage.ru_utime.tv_sec +
-				(double)rusage.ru_utime.tv_usec / 1000000.0;
-	}
-#endif
-
-#if defined(_SC_CLK_TCK)
-	{
-		const double ticks = (double)sysconf( _SC_CLK_TCK );
-		struct tms tms;
-		if ( times( &tms ) != (clock_t)-1 )
-			return (double)tms.tms_utime / ticks;
-	}
-#endif
-
-#if defined(CLOCKS_PER_SEC)
-	{
-		clock_t cl = clock( );
-		if ( cl != (clock_t)-1 )
-			return (double)cl / (double)CLOCKS_PER_SEC;
-	}
-#endif
-
-#endif
-
-	return -1;		/* Failed. */
-}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MINUNIT_MINUNIT_H */
+#endif /* MINUNIT_MINUNIT_H */ 
