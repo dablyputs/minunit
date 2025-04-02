@@ -5,12 +5,13 @@ Minunit is a minimal unit testing framework for C/C++ with a modular design and 
 ## Features
 
 - Single header core (`minunit.h`)
-- Modular extensions system
-- Colored verbose output mode
-- JTN002 compatibility mode
-- Built-in timing utilities
-- Cross-platform support
-- No external dependencies
+- Extensions (created by David Sewell):
+  - Modular extensions system
+  - Colored verbose output mode
+  - JTN002 compatibility mode
+  - Built-in timing utilities
+  - Cross-platform support
+  - No external dependencies
 
 ## Project Structure
 
