@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -I.
+CFLAGS = -Wall -Wextra -I. -g -O0
 LDFLAGS = -lm
 
 # Example targets
